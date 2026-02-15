@@ -340,6 +340,14 @@ footer .powered a{color:var(--gold);font-weight:600}
             <span class="cart-total-label">Total</span>
             <span class="cart-total-value" id="cartTotal">$0</span>
         </div>
+        <div style="margin-bottom:12px">
+            <input type="text" id="cartDir" placeholder="Tu dirección (calle y número)" style="width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:14px;font-family:var(--font-body);outline:none;margin-bottom:8px" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
+            <div style="display:flex;gap:8px">
+                <button class="pago-btn" onclick="selPago(this,'Efectivo')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg3);color:var(--gray1);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:var(--transition)">💵 Efectivo</button>
+                <button class="pago-btn" onclick="selPago(this,'Débito')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg3);color:var(--gray1);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:var(--transition)">💳 Débito</button>
+                <button class="pago-btn" onclick="selPago(this,'Transferencia')" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg3);color:var(--gray1);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:var(--transition)">🏦 Transfer.</button>
+            </div>
+        </div>
         <button class="cart-wa-btn" onclick="sendWhatsApp()">
             <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
             Pedir por WhatsApp
@@ -528,20 +536,47 @@ function toggleCart() {
     document.body.style.overflow = document.getElementById('cartDrawer').classList.contains('open') ? 'hidden' : '';
 }
 
+let pagoSeleccionado = '';
+
+function selPago(btn, tipo) {
+    pagoSeleccionado = tipo;
+    document.querySelectorAll('.pago-btn').forEach(b => {
+        b.style.background = 'var(--bg3)';
+        b.style.borderColor = 'var(--border)';
+        b.style.color = 'var(--gray1)';
+    });
+    btn.style.background = 'var(--gold-dim)';
+    btn.style.borderColor = 'var(--gold)';
+    btn.style.color = 'var(--gold)';
+}
+
 function sendWhatsApp() {
     if (cart.length === 0) return;
-    let msg = '🍕 *PEDIDO — La Gran Familia*\n\n';
+    const dir = document.getElementById('cartDir').value.trim();
+    if (!dir) {
+        document.getElementById('cartDir').style.borderColor = '#c0392b';
+        document.getElementById('cartDir').placeholder = 'Completá tu dirección para pedir';
+        document.getElementById('cartDir').focus();
+        return;
+    }
+    if (!pagoSeleccionado) {
+        alert('Elegí una forma de pago');
+        return;
+    }
+    let msg = 'PEDIDO - La Gran Familia\n';
+    msg += '----------------------------\n';
     let total = 0;
     cart.forEach(c => {
         const item = MENU[c.cat][c.idx];
         const sub = item.price * c.qty;
         total += sub;
-        msg += `• ${item.name} x${c.qty} — $${sub.toLocaleString()}\n`;
+        msg += c.qty + 'x ' + item.name + ' - $' + sub.toLocaleString() + '\n';
     });
-    msg += `\n*TOTAL: $${total.toLocaleString()}*\n\n`;
-    msg += '📍 Dirección: \n';
-    msg += '💳 Forma de pago: \n';
-    msg += '\n¡Gracias!';
+    msg += '----------------------------\n';
+    msg += 'TOTAL: $' + total.toLocaleString() + '\n\n';
+    msg += 'Direccion: ' + dir + '\n';
+    msg += 'Pago: ' + pagoSeleccionado + '\n\n';
+    msg += 'Gracias!';
     const url = 'https://wa.me/59894489661?text=' + encodeURIComponent(msg);
     window.open(url, '_blank');
 }
